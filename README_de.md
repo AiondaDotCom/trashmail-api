@@ -1,60 +1,60 @@
-# TrashMail.com public HTTP API - Reference
+# TrashMail.com öffentliche HTTP API - Schnittstellenbeschreibung
 
-In this document, the backend endpoints and their behavior are documented. This description will subsequently serve as the basis for the development of the iOS and macOS app and for this reason should be as error-free as possible. Before pushing changes to this document, the Xcode project must be checked after using the endpoints and adjusted if necessary!
+In diesem Dokument werden die Backend-Endpunkte und deren Verhalten dokumentiert. Diese Beschreibung dient anschließend als Grundlage für die Entwicklung der iOS- und macOS-App und sollte aus diesem Grund möglichst fehlerfrei sein. Bevor Änderungen an diesem Dokument gepusht werden, muss das Xcode-Projekt nach der Verwendung der Endpunkte kontrolliert und ggf. angepasst werden!
 
-The information provided here is based on:
+Die hier bereitgestellten Informationen basieren auf:
 
-1. the source code of the TrashMail.com backend
-2. the examined TrashMail-com frontend
-3. existing TrashMail extensions
-4. and the studied production backend using [Postman](https://www.postman.com).
+1. dem Quellcode des TrashMail.com-Backends
+2. dem untersuchten TrashMail-com-Frontend
+3. bestehenden TrashMail-Extensions
+4. und dem untersuchten Production-Backend mithilfe von [Postman](https://www.postman.com)
 
-To demonstrate the functionality in the best possible way, the test user "User" is used in the following examples. The requests and responses are not kept generic, but show the data of "User".
+Um die Funktionsweise bestmöglich zu demonstrieren, wird der Testnutzer "User" in den nachfolgenden Beispielen verwendet. Die Requests und Responses werden nicht generisch gehalten, sondern zeigen die Daten von "User".
 
-The structure of this document follows a clear structure. Each endpoint is introduced with.
+Der Aufbau dieses Dokuments folgt einer klaren Struktur. Jeder Endpunkt wird mit...
 
-1. its address (URL) introduced
-2. defined with a short description of its functionality
-3. the expected input parameters (e.g. the structure of the JSON) specified
-4. specifies the expected output parameters (e.g. the structure of the JSON)
-5. and specified with possible hints or special features.
+1. seiner Adresse (URL) eingeführt
+2. mit einer kurzen Beschreibung der Funktionalität definiert
+3. den erwarteten Eingabeparametern (z.B. der Aufbau des JSON) spezifiziert
+4. den erwarteten Ausgabeparametern (z.B. der Aufbau des JSON) spezifiziert
+5. und mit möglichen Hinweisen bzw. Besonderheiten konkretisiert
 
-Each endpoint follows the same structure:
+Jeder Endpunkt folgt dem gleichen Aufbau:  
 
 ```text
 https://trashmail.com/?
-api=1 &   // Enables API functionality
+api=1 &   // Aktiviert API-Funktionalität
 lang=x &  // en, de, fr
-cmd=x     // Depending on the function to be called
+cmd=x     // Je nach aufzurufende Funktion
 
-// Parameters are not specified in the URL as in REST, but in the HTTP body.
+// Parameter werden nicht wie bei REST in der URL angegeben, sondern im HTTP-Body.
 ```
 
-Error messages always have the same structure:
+Fehlermeldungen haben immer den gleichen Aufbau:
 
 ```text
 {
    "success":false,
-   "error_code":x,    // Error code > 0
-   "msg":"x"          // Describes the error (or the code)
+   "error_code":x,    // Fehlercode > 0
+   "msg":"x"          // Beschreibt den Fehler (bzw. den Code)
 }
 ```
 
-Success messages always have the same structure:
+Erfolgsmeldungen haben immer den gleichen Aufbau:
 
 ```text
 {
    "success":true,
-   "error_code":0,    // Code 0 corresponds to success
-   "msg":{...}        // Depending on the endpoint Response to the request
+   "error_code":0,    // Code 0 entspricht Erfolg
+   "msg":{...}        // Je nach Endpunkt Antwort zur Anfrage
 }
 ```
 
-**The JSON property "msg" is returned in a different language depending on the HTTP GET(lang) set!**
+**Die JSON-Eigenschaft "msg" wird je nach gesetzem HTTP-GET(lang) in einer anderen Sprache zurückgegeben!**
 
-## Available commands (cmd's)
+## Verfügbare Kommandos (cmds)
 
-### User data
+### Benutzerdaten
 
 * [login](#login)
 * [add\_real\_email](#add\_real\_email)
@@ -79,7 +79,7 @@ Success messages always have the same structure:
 * [read\_user\_data](#read\_user\_data)
 
 
-### All TrashMails regarding
+### Alle TrashMails betreffend
 
 * [read\_dea](#read\_dea)
 * [read\_dea (Suche)](#read\_dea\(Suche\))
@@ -90,7 +90,7 @@ Success messages always have the same structure:
 * [set\_sim\_ml](#set\_sim\_ml)
 
 
-### Each for one TrashMail
+### Jeweils für eine TrashMail
 
 * [create\_dea](#create\_dea)
 * [update\_dea](#update\_dea)
@@ -119,13 +119,13 @@ Success messages always have the same structure:
 * [send\_mail](#send\_mail)
 
 
-## Explanation of the endpoints
+## Erklärung der Endpunkte
 
 
 ***
 
-If the request is sent as `x-www-form-urlencoded`:  
-The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-encoding): `[1,2,3]` => `%5B1,2,3%5D`, `mail@domain.de` => `mail%40domain.com`, etc. (For Swift: `addingPercentEncoding`).
+Wenn die Anfrage als `x-www-form-urlencoded` versendet wird:  
+Die POST-Parameter müssen [URL-kodiert](https://en.wikipedia.org/wiki/Percent-encoding) werden: `[1,2,3]` => `%5B1,2,3%5D`, `mail@domain.de` => `mail%40domain.de` usw. (Bei Swift: `addingPercentEncoding`).
 
 ***
 
@@ -136,13 +136,13 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 
 > <https://trashmail.com/?api=1&lang=en&cmd=login>
 
-*This endpoint enables login to the TrashMail.com server to subsequently access backend functionalities.*
+*Dieser Endpunkt ermöglicht den Login am TrashMail.com-Server, um anschließend auf Funktionalitäten des Backends zuzugreifen.*
 
 ```javascript
-// Input
+// Eingabe
 
-// HTTP method: POST
-// Expected properties: fe-login-user, fe-login-pass
+// HTTP-Methode: POST
+// Erwartete Eigenschaften: fe-login-user, fe-login-pass
 // Content-Type: application/json
 
 {
@@ -152,7 +152,7 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 ```
 
 ```javascript
-// Output
+// Ausgabe
 
 // Content-Type: application/json
 
@@ -199,10 +199,9 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 }
 ```
 
-**Notes:** 
+**Hinweise:** 
 
-
-* The call of this endpoint must be made before the call of other endpoints providing functionalities! If this is not adhered to, the error message "Not logged in or expired session." will be returned.
+* Der Aufruf dieses Endpunkts muss vor dem Aufruf anderer Endpunkte, die Funktionalitäten bereitstellen, erfolgen! Wenn sich daran nicht gehalten wird, wird als Fehlermeldung "Not logged in or expired session." zurückgegeben.
 
 ***
 
@@ -214,17 +213,17 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 
 > <https://trashmail.com/?api=1&lang=en&cmd=logout>
 
-*This endpoint logs the user out of the TrashMail.com server and resets the server-side session. After calling this endpoint, the `login` endpoint must be called again to use the TrashMail.com server functionalities.*
+*Dieser Endpunkt meldet den Benutzer am TrashMail.com-Server ab und setzt die serverseitige Session zurück. Nach dem Aufruf dieses Endpunktes muss erneut der Endpunkt `login` aufgerufen werden, um die Funktionalitäten des TrashMail.com-Servers zu nutzen.*
 
 ```javascript
-// Input
+// Eingabe
 
-// HTTP method: POST
-// Expected properties: -
+// HTTP-Methode: POST
+// Erwartete Eigenschaften: -
 ```
 
 ```javascript
-// Output
+// Ausgabe
 
 // Content-Type: application/json
 
@@ -234,9 +233,9 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 }
 ```
 
-**Notes:**
+**Hinweise:** 
 
-* None
+* Keine
 
 ***
 
@@ -249,17 +248,17 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 
 > <https://trashmail.com/?api=1&lang=en&cmd=list_real_emails>
 
-*Returns all real email addresses stored in the account.*
+*Gibt alle im Account hinterlegten realen E-Mail Adressen zurück.*
 
 ```javascript
-// Input
+// Eingabe
 
-// HTTP method: POST
-// Expected properties: -
+// HTTP-Methode: POST
+// Erwartete Eigenschaften: -
 ```
 
 ```javascript
-// Output
+// Ausgabe
 
 // Content-Type: application/json
 
@@ -278,9 +277,9 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 }
 ```
 
-**Notes:**
+**Hinweise:** 
 
-* None
+* Keine
 
 ***
 
@@ -293,13 +292,13 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 
 > <https://trashmail.com/?api=1&lang=en&cmd=add_real_email>
 
-*Adds a real email address to the account.*
+*Fügt dem Account eine echte E-Mail Adresse hinzu.*
 
 ```javascript
-// Input
+// Eingabe
 
-// HTTP method: POST
-// Expected properties: email
+// HTTP-Methode: POST
+// Erwartete Eigenschaften: email
 // Content-Type: application/json
 
 {
@@ -308,7 +307,7 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 ```
 
 ```javascript
-// Output
+// Ausgabe
 
 // Content-Type: application/json
 
@@ -318,9 +317,9 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 }
 ```
 
-**Notes:**
+**Hinweise:** 
 
-* If the request was successful, the email address will not yet appear among your own email addresses. A successful request will only trigger a confirmation email to the real email address and will only be assigned to the account afterwards.
+* Wenn die Anfrage erfolgreich war, erscheint die E-Mail Adresse noch nicht unter den eigenen E-Mail Adressen. Eine erfolgreiche Anfrage löst lediglich eine Bestätigungsmail an die echte E-Mail Adresse aus und wird erst danach dem Konto zugewiesen.
 
 ***
 
@@ -331,14 +330,13 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 
 > <https://trashmail.com/?api=1&lang=en&cmd=set_default_email>
 
-*Sets one of the real email addresses stored in the account as default.*
-
+*Setzt eine der im Account hinterlegten echten E-Mail Adressen als Standard.*
 
 ```javascript
-// Input
+// Eingabe
 
-// HTTP method: POST
-// Expected properties: email
+// HTTP-Methode: POST
+// Erwartete Eigenschaften: email
 // Content-Type: application/json
 
 {
@@ -347,7 +345,7 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 ```
 
 ```javascript
-// Output
+// Ausgabe
 
 // Content-Type: application/json
 
@@ -357,9 +355,9 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 }
 ```
 
-**Notes:**
+**Hinweise:** 
 
-* Non-existing email addresses will be rejected with the message "This email address needs to be confirmed first. Please check your email inbox for a confirmation email." rejected.
+* Nicht existierende E-Mail Adressen werden mit der Meldung "This email address needs to be confirmed first. Please check your email inbox for a confirmation email." abgelehnt.
 
 ***
 
@@ -370,13 +368,13 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 
 > <https://trashmail.com/?api=1&lang=en&cmd=set_failover_email>
 
-*Sets one of the real email addresses stored in the account as failover.*
+*Setzt eine der im Account hinterlegten echten E-Mail Adressen als Failover.*
 
 ```javascript
-// Input
+// Eingabe
 
-// HTTP method: POST
-// Expected properties: email
+// HTTP-Methode: POST
+// Erwartete Eigenschaften: email
 // Content-Type: application/json
 
 {
@@ -385,7 +383,7 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 ```
 
 ```javascript
-// Output
+// Ausgabe
 
 // Content-Type: application/json
 
@@ -395,9 +393,9 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 }
 ```
 
-**Notes:**
+**Hinweise:** 
 
-* A failover address is optional. For this reason it can also be reset. For this purpose `"email":""` must be sent.
+* Eine Failover-Adresse ist optional. Aus diesem Grund kann sie auch zurückgesetzt werden. Dafür muss `"email":""` gesendet werden.
 
 ***
 
@@ -408,13 +406,13 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 
 > <https://trashmail.com/?api=1&lang=en&cmd=del_real_email>
 
-*Removes one of the real email addresses stored in the account.*
+*Entfernt eine der im Account hinterlegten echten E-Mail Adressen.*
 
 ```javascript
-// Input
+// Eingabe
 
-// HTTP method: POST
-// Expected properties: email
+// HTTP-Methode: POST
+// Erwartete Eigenschaften: email
 // Content-Type: application/json
 
 {
@@ -423,7 +421,7 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 ```
 
 ```javascript
-// Output
+// Ausgabe
 
 // Content-Type: application/json
 
@@ -434,11 +432,12 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 }
 ```
 
-**Notes:**
+**Hinweise:** 
 
-* If the default email address is removed, another email address will automatically be set as default.
+* Wenn die Standard-Mail Adresse entfernt wird, wird automatisch eine andere E-Mail Adresse als Standard gesetzt.
 
 ***
+
 
 
 
@@ -447,13 +446,13 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 
 > <https://trashmail.com/?api=1&lang=en&cmd=add_domain>
 
-*Adds own domain to the account for personalized email addresses.
+*Fügt dem Account eine eigene Domain für personalisierte E-Mail Adressen hinzu.*
 
 ```javascript
-// Input
+// Eingabe
 
-// HTTP method: POST
-// Expected properties: domain
+// HTTP-Methode: POST
+// Erwartete Eigenschaften: domain
 // Content-Type: application/json
 
 {
@@ -462,7 +461,7 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 ```
 
 ```javascript
-// Output
+// Ausgabe
 
 // Content-Type: application/json
 
@@ -473,9 +472,9 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 }
 ```
 
-**Notes:**
+**Hinweise:**
 
-* None
+* Keine
 
 ***
 
@@ -487,17 +486,17 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 
 > <https://trashmail.com/?api=1&lang=en&cmd=status_domains>
 
-*Returns the current status for all domains stored in the account.
+*Gibt den aktuellen Status für alle im Account hinterlegten Domains zurück.*
 
 ```javascript
-// Input
+// Eingabe
 
-// HTTP method: POST
-// Expected properties: -
+// HTTP-Methode: POST
+// Erwartete Eigenschaften: -
 ```
 
 ```javascript
-// Output
+// Ausgabe
 
 // Content-Type: application/json
 
@@ -517,9 +516,9 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 }
 ```
 
-**Notes:**
+**Hinweise:**
 
-* To get the status of a single domain, the corresponding domain must be extracted from the array. There is no endpoint that can be explicitly requested for a domain.
+* Um an den Status einer einzelnen Domain zu kommen, muss die entsprechende Domain aus dem Array extrahiert werden. Es gibt keinen Endpunkt der explizit für eine Domain angefragt werden kann.
 
 ***
 
@@ -532,13 +531,13 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 
 > <https://trashmail.com/?api=1&lang=en&cmd=del_domain>
 
-*Removes one of the domains stored in the account.*
+*Entfernt eine der im Account hinterlegten Domains.*
 
 ```javascript
-// Input
+// Eingabe
 
-// HTTP method: POST
-// Expected properties: domain
+// HTTP-Methode: POST
+// Erwartete Eigenschaften: domain
 // Content-Type: application/json
 
 {
@@ -547,7 +546,7 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 ```
 
 ```javascript
-// Output
+// Ausgabe
 
 // Content-Type: application/json
 
@@ -557,9 +556,9 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 }
 ```
 
-**Notes:**
+**Hinweise:**
 
-* When deleting a non-existent domain, no error description is returned: `{"success":false, "error_code":0}`.
+* Beim Löschen einer nicht vorhandenen Domain kommt keine Fehlerbeschreibung zurück: `{"success":false,"error_code":0}`.
 
 ***
 
@@ -571,18 +570,17 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 
 > <https://trashmail.com/?api=1&lang=en&cmd=list_domains>
 
-
-*Returns all domains stored in the account.*
+*Gibt alle im Account hinterlegten Domains zurück.*
 
 ```javascript
-// Input
+// Eingabe
 
-// HTTP method: POST
-// Expected properties: -
+// HTTP-Methode: POST
+// Erwartete Eigenschaften: -
 ```
 
 ```javascript
-// Output
+// Ausgabe
 
 // Content-Type: application/json
 
@@ -612,11 +610,12 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 }
 ```
 
-**Notes:**
+**Hinweise:**
 
-* None
+* Keine
 
 ***
+
 
 
 
@@ -625,17 +624,17 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 
 > <https://trashmail.com/?api=1&lang=en&cmd=del_account>
 
-*Removes an existing user account on TrashMail.com.*
+*Entfernt einen bestehenden Benutzeraccount auf TrashMail.com.*
 
 ```javascript
-// Input
+// Eingabe
 
-// HTTP method: POST
-// Expected properties: -
+// HTTP-Methode: POST
+// Erwartete Eigenschaften: -
 ```
 
 ```javascript
-// Output
+// Ausgabe
 
 // Content-Type: application/json
 
@@ -646,9 +645,9 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 }
 ```
 
-**Notes:**
+**Hinweise:**
 
-* The request does not specify which user should be removed. For security reasons only the logged in user can be removed (`{"success":false, "error_code":2, "msg": "Not logged in or expired session."}`).
+* Im Request wird nicht angegeben, welcher Benutzer entfernt werden soll. Aus Sicherheitsgründen kann immer nur der eingeloggte Benutzer entfernt werden (`{"success":false,"error_code":2,"msg":"Not logged in or expired session."}`).
 
 ***
 
@@ -660,13 +659,13 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 
 > <https://trashmail.com/?api=1&lang=en&cmd=register_account>
 
-*Registers a new user account on TrashMail.com.*
+*Registriert einen neuen Benutzeraccount auf TrashMail.com.*
 
 ```javascript
-// Input
+// Eingabe
 
-// HTTP method: POST
-// Expected properties: email, user, pass, newsletter
+// HTTP-Methode: POST
+// Erwartete Eigenschaften: email, user, pass, newsletter
 // Content-Type: application/json
 
 {
@@ -678,7 +677,7 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 ```
 
 ```javascript
-// Output
+// Ausgabe
 
 // Content-Type: application/json
 
@@ -688,9 +687,9 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 }
 ```
 
-**Notes:**
+**Hinweise:**
 
-* None
+* Keine
 
 ***
 
@@ -702,13 +701,13 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 
 > <https://trashmail.com/?api=1&lang=en&cmd=reset_password>
 
-*Resets the password to an existing user account if it has been forgotten.
+*Setzt das Passwort zu einem bestehenden Benutzeraccount zurück, falls dieses vergessen wurde.*
 
 ```javascript
-// Input
+// Eingabe
 
-// HTTP method: POST
-// Expected properties: email
+// HTTP-Methode: POST
+// Erwartete Eigenschaften: email
 // Content-Type: application/json
 
 {
@@ -717,7 +716,7 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 ```
 
 ```javascript
-// Output
+// Ausgabe
 
 // Content-Type: application/json
 
@@ -727,11 +726,12 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 }
 ```
 
-**Notes:**
+**Hinweise:**
 
-* This endpoint must not be confused with the "Change Password" function! This endpoint triggers an email with password reset instructions.
+* Dieser Endpunkt darf nicht mit der "Passwort ändern"-Funktion verwechselt werden! Dieser Endpunkt löst eine E-Mail mit Anweisungen zum Passwort-Reset aus.
 
 ***
+
 
 
 
@@ -740,20 +740,20 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 
 > <https://trashmail.com/?api=1&lang=en&cmd=change_password>
 
-*Changes the password to an existing user account.
+*Ändert das Passwort zu einem bestehenden Benutzeraccount.*
 
 ```javascript
-// Input
+// Eingabe
 
-// HTTP method: POST
-// Expected properties: pass-cfrm
+// HTTP-Methode: POST
+// Erwartete Eigenschaften: pass-cfrm
 // Content-Type: application/x-www-form-urlencoded
 
 "pass-cfrm:apfel112"        // Key-Value x-www-form-urlencoded
 ```
 
 ```javascript
-// Output
+// Ausgabe
 
 // Content-Type: application/json
 
@@ -763,9 +763,9 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 }
 ```
 
-**Notes:**
+**Hinweise:**
 
-* The new password is expected on the server side as a simple POST parameter. For this reason `application/x-www-form-urlencoded` must be used here instead of JSON.
+* Das neue Passwort wird serverseitig als einfacher POST-Parameter erwartet. Aus diesem Grund muss hier `application/x-www-form-urlencoded` statt JSON verwendet werden.
 
 ***
 
@@ -777,13 +777,13 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 
 > <https://trashmail.com/?api=1&lang=en&cmd=set_newsletter>
 
-*Enables or disables the sending of newsletters to the real email address stored in the account.
+*Aktiviert oder deaktiviert das Zusenden von Newslettern auf die im Account hinterlegte echte E-Mail Adresse.*
 
 ```javascript
-// Input
+// Eingabe
 
-// HTTP method: POST
-// Expected properties: newsletter
+// HTTP-Methode: POST
+// Erwartete Eigenschaften: newsletter
 // Content-Type: application/json
 
 {
@@ -792,7 +792,7 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 ```
 
 ```javascript
-// Output
+// Ausgabe
 
 // Content-Type: application/json
 
@@ -802,9 +802,9 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 }
 ```
 
-**Notes:**
+**Hinweise:**
 
-* None
+* Keine
 
 ***
 
@@ -816,20 +816,20 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 
 > <https://trashmail.com/?api=1&lang=en&cmd=set_status>
 
-*Sets the frequency (e.g. weekly) at which status messages should be sent to the real email address.
+*Setzt die Frequenz (z.B. wöchentlich), in der Statusnachrichten an die echte E-Mail Adresse verschickt werden sollen.*
 
 ```javascript
-// Input
+// Eingabe
 
-// HTTP method: POST
-// Expected properties: data
+// HTTP-Methode: POST
+// Erwartete Eigenschaften: data
 // Content-Type: application/x-www-form-urlencoded
 
 "data: 7"       // Key-Value x-www-form-urlencoded
 ```
 
 ```javascript
-// Output
+// Ausgabe
 
 // Content-Type: application/json
 
@@ -840,9 +840,9 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 }
 ```
 
-**Notes:**
+**Hinweise:**
 
-* The frequency is expected on the server side as a simple GET/POST parameter. For this reason `application/x-www-form-urlencoded` must be used here instead of JSON.
+* Die Frequenz wird serverseitig als einfacher GET/POST-Parameter erwartet. Aus diesem Grund muss hier `application/x-www-form-urlencoded` statt JSON verwendet werden.
 
 ***
 
@@ -854,17 +854,17 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 
 > <https://trashmail.com/?api=1&lang=en&cmd=send_status>
 
-*Triggers the sending of the status message manually to the real email address stored in the account.
+*Löst das Versenden der Statusmeldung auf die im Account hinterlegte echte E-Mail Adresse manuell aus.*
 
 ```javascript
-// Input
+// Eingabe
 
-// HTTP method: POST
-// Expected properties: -
+// HTTP-Methode: POST
+// Erwartete Eigenschaften: -
 ```
 
 ```javascript
-// Output
+// Ausgabe
 
 // Content-Type: application/json
 
@@ -875,9 +875,9 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 }
 ```
 
-**Notes:**
+**Hinweise:**
 
-* None
+* Keine
 
 ***
 
@@ -889,17 +889,17 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 
 > <https://trashmail.com/?api=1&lang=en&cmd=download_dea_csv>
 
-*Returns all TrashMails belonging to the user account in CSV format.
+*Gibt alle zum Benutzeraccount gehörigen TrashMails im CSV-Format zurück.*
 
 ```javascript
-// Input
+// Eingabe
 
-// HTTP method: POST
-// Expected properties: -
+// HTTP-Methode: POST
+// Erwartete Eigenschaften: -
 ```
 
 ```javascript
-// Output
+// Ausgabe
 
 // Content-Type: text/plain;charset=UTF-8
 
@@ -911,9 +911,9 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 // Aug 10, 2020;1;josefin_habel77@0box.eu;trashmail_1@ example.email;"";2;6;"";0;1;1;
 ```
 
-**Notes:**
+**Hinweise:**
 
-* None
+* Keine
 
 ***
 
@@ -925,13 +925,13 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 
 > <https://trashmail.com/?api=1&lang=en&cmd=save_settings>
 
-*Enables or disables sending a confirmation mail when a TrashMail is created.
+*Aktiviert bzw. deaktiviert das Senden einer Bestätigungsmail, wenn eine TrashMail erstellt wurde.*
 
 ```javascript
-// Input
+// Eingabe
 
-// HTTP method: POST
-// Expected properties: key, value
+// HTTP-Methode: POST
+// Erwartete Eigenschaften: key, value
 // Content-Type: application/x-www-form-urlencoded
 
 "key:notify-on-create-dea"      // Key-Value x-www-form-urlencoded
@@ -939,7 +939,7 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 ```
 
 ```javascript
-// Output
+// Ausgabe
 
 // Content-Type: application/json
 
@@ -949,9 +949,9 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 }
 ```
 
-**Notes:**
+**Hinweise:**
 
-* None
+* Keine
 
 ***
 
@@ -963,17 +963,17 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 
 > <https://trashmail.com/?api=1&lang=en&cmd=read_user_data>
 
-*Returns all relevant user settings. This endpoint can be used to display settings in the user interface.
+*Gibt alle relevanten Benutzereinstellungen zurück. Dieser Endpunkt kann für das Anzeigen von Einstellungen im User Interface verwendet werden.*
 
 ```javascript
-// Input
+// Eingabe
 
-// HTTP method: POST
-// Expected properties: -
+// HTTP-Methode: POST
+// Erwartete Eigenschaften: -
 ```
 
 ```javascript
-// Output
+// Ausgabe
 
 // Content-Type: application/json
 
@@ -995,12 +995,13 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 }
 ```
 
-**Notes:**
+**Hinweise:**
 
-* If TrashMail Plus is not active (`is_trashmail_plus_user ` = false), then an empty string is returned for `trashmail_plus_expires_at`.
-* `sim_ml` is short for "simulating mailing list" and represents the add mailing list unsubscribe option.
+* Wenn TrashMail Plus nicht aktiv ist (`is_trashmail_plus_user ` = false), dann wird ein leerer String für `trashmail_plus_expires_at` zurückgegeben.
+* `sim_ml` ist die Abkürzung für "simulating mailing list" und repräsentiert die Option für "Add mailing list unsubscribe option".
 
 ***
+
 
 
 
@@ -1009,17 +1010,17 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 
 > <https://trashmail.com/?api=1&lang=en&cmd=read_dea>
 
-*Returns all TrashMails of the user account.
+*Gibt alle TrashMails des Benutzeraccounts zurück.*
 
 ```javascript
-// Input
+// Eingabe
 
-// HTTP method: POST
-// Expected properties: -
+// HTTP-Methode: POST
+// Erwartete Eigenschaften: -
 ```
 
 ```javascript
-// Output
+// Ausgabe
 
 // Content-Type: application/json
 
@@ -1064,9 +1065,9 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 }
 ```
 
-**Notes:**
+**Hinweise:**
 
-* None
+* Keine
 
 ***
 
@@ -1078,20 +1079,20 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 
 > <https://trashmail.com/?api=1&lang=en&cmd=read_dea>
 
-*Returns all TrashMails for a specific search criterion of the user account.
+*Gibt alle TrashMails zu einem bestimmten Suchkriterium des Benutzeraccounts zurück.*
 
 ```javascript
-// Input
+// Eingabe
 
-// HTTP method: POST
-// Expected properties: search
+// HTTP-Methode: POST
+// Erwartete Eigenschaften: search
 // Content-Type: application/x-www-form-urlencoded
 
 "search:test"       // Key-Value x-www-form-urlencoded
 ```
 
 ```javascript
-// Output
+// Ausgabe
 
 // Content-Type: application/json
 
@@ -1136,9 +1137,9 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 }
 ```
 
-**Notes:**
+**Hinweise:**
 
-* None
+* Keine
 
 ***
 
@@ -1151,13 +1152,13 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 
 > <https://trashmail.com/?api=1&lang=en&cmd=set_rewrite_from>
 
-*Enables or disables rewriting of the "From" header in forwarded emails.
+*Aktiviert oder deaktiviert das Umschreiben des "From"-Headers in weitergeleiteten E-Mails.*
 
 ```javascript
-// Input
+// Eingabe
 
-// HTTP method: POST
-// Expected properties: flag
+// HTTP-Methode: POST
+// Erwartete Eigenschaften: flag
 // Content-Type: application/json
 
 {
@@ -1166,7 +1167,7 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 ```
 
 ```javascript
-// Output
+// Ausgabe
 
 // Content-Type: application/json
 
@@ -1176,9 +1177,9 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 }
 ```
 
-**Notes:**
+**Hinweise:**
 
-* None
+* Keine
 
 ***
 
@@ -1191,13 +1192,13 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 
 > <https://trashmail.com/?api=1&lang=en&cmd=set_rewrite_to>
 
-*Enables or disables rewriting of the "To" header in forwarded emails.
+*Aktiviert oder deaktiviert das Umschreiben des "To"-Headers in weitergeleiteten E-Mails.*
 
 ```javascript
-// Input
+// Eingabe
 
-// HTTP method: POST
-// Expected properties: flag
+// HTTP-Methode: POST
+// Erwartete Eigenschaften: flag
 // Content-Type: application/json
 
 {
@@ -1206,7 +1207,7 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 ```
 
 ```javascript
-// Output
+// Ausgabe
 
 // Content-Type: application/json
 
@@ -1216,9 +1217,9 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 }
 ```
 
-**Notes:**
+**Hinweise:**
 
-* None
+* Keine
 
 ***
 
@@ -1231,13 +1232,13 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 
 > <https://trashmail.com/?api=1&lang=en&cmd=set_log_emails>
 
-*Enables or disables logging of email content at log.
+*Aktiviert oder deaktiviert das Loggen des E-Mail Inhalts beim Protokoll.*
 
 ```javascript
-// Input
+// Eingabe
 
-// HTTP method: POST
-// Expected properties: flag
+// HTTP-Methode: POST
+// Erwartete Eigenschaften: flag
 // Content-Type: application/json
 
 {
@@ -1246,7 +1247,7 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 ```
 
 ```javascript
-// Output
+// Ausgabe
 
 // Content-Type: application/json
 
@@ -1256,11 +1257,14 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 }
 ```
 
-**Notes:**
+**Hinweise:**
 
-* None
+* Keine
 
 ***
+
+
+
 
 
 
@@ -1268,13 +1272,13 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 
 > <https://trashmail.com/?api=1&lang=en&cmd=set_subject_prefix>
 
-*This can be used to set a prefix in the subject of each forwarded email.
+*Hierüber kann ein Präfix im Betreff jeder weitergeleiteten E-Mail gesetzt werden.*
 
 ```javascript
-// Input
+// Eingabe
 
-// HTTP method: POST
-// Expected properties: prefix
+// HTTP-Methode: POST
+// Erwartete Eigenschaften: prefix
 // Content-Type: application/json
 
 {
@@ -1283,7 +1287,7 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 ```
 
 ```javascript
-// Output
+// Ausgabe
 
 // Content-Type: application/json
 
@@ -1293,11 +1297,13 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 }
 ```
 
-**Notes:**
+**Hinweise:**
 
-* None
+* Keine
 
 ***
+
+
 
 
 
@@ -1306,13 +1312,13 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 
 > <https://trashmail.com/?api=1&lang=en&cmd=set_sim_ml>
 
-*Enables or disables the mailing list unsubscribe function.
+*Aktiviert oder deaktiviert die Mailing-List-Deabonnieren-Funktion.*
 
 ```javascript
-// Input
+// Eingabe
 
-// HTTP method: POST
-// Expected properties: flag
+// HTTP-Methode: POST
+// Erwartete Eigenschaften: flag
 // Content-Type: application/json
 
 {
@@ -1321,7 +1327,7 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 ```
 
 ```javascript
-// Output
+// Ausgabe
 
 // Content-Type: application/json
 
@@ -1331,11 +1337,15 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 }
 ```
 
-**Notes:**
+**Hinweise:**
 
-* `sim_ml` is the abbreviation for "simulating mailing list" and represents the option for "Add mailing list unsubscribe option".
+* `sim_ml` ist die Abkürzung für "simulating mailing list" und repräsentiert die Option für "Add mailing list unsubscribe option".
 
 ***
+
+
+
+
 
 
 
@@ -1344,13 +1354,13 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 
 > <https://trashmail.com/?api=1&lang=en&cmd=destroy_dea>
 
-*Removes TrashMails of the user account.
+*Entfernt TrashMails des Benutzeraccounts.*
 
 ```javascript
-// Input
+// Eingabe
 
-// HTTP method: POST
-// Expected properties: data
+// HTTP-Methode: POST
+// Erwartete Eigenschaften: data
 // Content-Type: application/json
 
 {
@@ -1365,7 +1375,7 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 ```
 
 ```javascript
-// Output
+// Ausgabe
 
 // Content-Type: application/json
 
@@ -1375,31 +1385,32 @@ The POST parameters must be [URL-encoded](https://en.wikipedia.org/wiki/Percent-
 }
 ```
 
-**Notes:**
+**Hinweise:**
 
-* The deletion is not done by the name of the TrashMail, but by the ID, which returns e.g. at `read_dea`.
+* Das Löschen erfolgt nicht über den Namen der TrashMail, sondern über die ID, die z.B. bei `read_dea` zurückkommt.
 
 ***
 
 
 
 
+
 ### send\_mail
 
-_!!! TrashMail Plus Feature !!!_
+_!!! TrashMail-Plus Feature !!!_
 
 > <https://trashmail.com/?api=1&lang=en&cmd=send_mail>
 
-*Sends an email via the specified TrashMail.
+*Versendet eine E-Mail über die angegebene TrashMail.*
 
 **Update 10.09.20:**
-Another JSON property `authenticate_key` is introduced in the HTTP request. It contains a string with an authentication code for the iOS app to send emails without captcha code.
+Im HTTP-Request wird eine weitere JSON-Eigenschaft `authenticate_key` eingeführt. Sie enthält einen String mit einem Authentifizierungscode für die iOS-App, damit diese ohne Captcha-Code E-Mails versenden kann.
 
 ```javascript
-// Input
+// Eingabe
 
-// HTTP method: POST
-// Expected properties: from, to, cc, bcc, subject, body, send-copy
+// HTTP-Methode: POST
+// Erwartete Eigenschaften: from, to, cc, bcc, subject, body, send-copy
 // Content-Type: application/json
 
 {
@@ -1415,7 +1426,7 @@ Another JSON property `authenticate_key` is introduced in the HTTP request. It c
 ```
 
 ```javascript
-// Output
+// Ausgabe
 
 // Content-Type: application/json
 
@@ -1425,31 +1436,32 @@ Another JSON property `authenticate_key` is introduced in the HTTP request. It c
 }
 ```
 
-**Notes:**
+**Hinweise:**
 
-* None
+* Keine
 
 ***
 
 
 
 
+
 ### create\_dea
 
-_!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
+_!!! TrashMail-Plus Feature (Weiterleitungen > 10 und Ablauf > 1 Monat) !!!_
 
 > <https://trashmail.com/?api=1&lang=en&cmd=create_dea>
 
-*Creates a new TrashMail with the specified parameters.
+*Erstellt eine neue TrashMail mit den angegebenen Parametern.*
 
 ```javascript
-// Input
+// Eingabe
 
-// HTTP method: POST
-// Expected properties: destination, from_name, disposable_name, disposable_domain, desc, website, enabled, forwards, expire, cs, notify, masq, catchAll, preferences
+// HTTP-Methode: POST
+// Erwartete Eigenschaften: destination, from_name, disposable_name, disposable_domain, desc, website, enabled, forwards, expire, cs, notify, masq, catchAll, preferences
 // Content-Type: application/json
 
-// Classic
+// Klassisch
 {
    "data":{
       "destination":"trashmail_1@example.email",                                // String
@@ -1480,7 +1492,7 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
    }
 }
 
-// Catch-All
+// Auto-Empfang
 {
    "data":{
       "destination":"trashmail_1@example.email",                                // String
@@ -1513,7 +1525,7 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 ```
 
 ```javascript
-// Output
+// Ausgabe
 
 // Content-Type: application/json
 
@@ -1542,28 +1554,29 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 }
 ```
 
-**Notes:**
+**Hinweise:**
 
-* Several TrashMails can be created in one array at the same time.
+* Es können in einem Array mehere TrashMails gleichzeitig erstellt werden.
 
 ***
 
 
 
 
+
 ### update\_dea
 
-_!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
+_!!! TrashMail-Plus Feature (Weiterleitungen > 10 und Ablauf > 1 Monat) !!!_
 
 > <https://trashmail.com/?api=1&lang=en&cmd=update_dea>
 
-*Changes the settings of a specific TrashMail.
+*Ändert die Einstellungen einer bestimmten TrashMail.*
 
 ```javascript
-// Input
+// Eingabe
 
-// HTTP method: POST
-// Expected properties: id (mandatory), enabled, from_name, disposable_name, disposable_domain, destination, desc, forwards, expire, website, cs, masq, notify, preferences
+// HTTP-Methode: POST
+// Erwartete Eigenschaften: id (einzig verpflichtend), enabled, from_name, disposable_name, disposable_domain, destination, desc, forwards, expire, website, cs, masq, notify, preferences
 // Content-Type: application/json
 
 // Zum Beispiel
@@ -1588,7 +1601,7 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 ```
 
 ```javascript
-// Output
+// Ausgabe
 
 // Content-Type: application/json
 
@@ -1610,12 +1623,13 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 }
 ```
 
-**Notes:** **
+**Hinweise:**
 
-* Not all values have to be set! It is enough if the value to be changed is specified in the JSON.
-* Several TrashMails can be changed at the same time in one array.
+* Es müssen nicht alle Werte gesetzt werden! Es reicht, wenn der Wert, der geändert werden soll, im JSON angegeben wird.
+* Es können in einem Array mehere TrashMails gleichzeitig geändert werden.
 
 ***
+
 
 
 
@@ -1624,20 +1638,20 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 
 > <https://trashmail.com/?api=1&lang=en&cmd=read_logging>
 
-*Reads the log of a specific TrashMail.
+*Liest das Protokoll einer bestimmten TrashMail aus.*
 
 ```javascript
-// Input
+// Eingabe
 
-// HTTP method: POST
-// Expected properties: id
+// HTTP-Methode: POST
+// Erwartete Eigenschaften: id
 // Content-Type: application/x-www-form-urlencoded
 
 "id:13549165"       // Key-Value x-www-form-urlencoded
 ```
 
 ```javascript
-// Output
+// Ausgabe
 
 // Content-Type: application/json
 
@@ -1660,11 +1674,12 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 }
 ```
 
-**Notes:**
+**Hinweise:**
 
-* None
+* Keine
 
 ***
+
 
 
 
@@ -1673,13 +1688,13 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 
 > <https://trashmail.com/?api=1&lang=en&cmd=read_logging_raw_data>
 
-*Returns the email content of a specific log entry.
+*Gibt den E-Mail Inhalt eines bestimmten Protokolleintrags zurück.*
 
 ```javascript
-// Input
+// Eingabe
 
-// HTTP method: POST
-// Expected properties: id, output
+// HTTP-Methode: POST
+// Erwartete Eigenschaften: id, output
 // Content-Type: application/x-www-form-urlencoded
 // Accept: application/json
 
@@ -1687,7 +1702,7 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 ```
 
 ```javascript
-// Output
+// Ausgabe
 
 // Content-Type: application/json
 
@@ -1698,11 +1713,12 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 }
 ```
 
-**Notes:**
+**Hinweise:**
 
-* The content type is determined by the HTTP header `accept`. Currently available are `application/json` and `text/plain`.
+* Der Inhaltstyp wird durch den HTTP-Header "Accept" ermittelt. Aktuell verfügbar sind `application/json` und `text/plain`.
 
 ***
+
 
 
 
@@ -1711,20 +1727,20 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 
 > <https://trashmail.com/?api=1&lang=en&cmd=read_logging_events>
 
-*Returns the events of a specific log entry.
+*Gibt die Ereignisse eines bestimmten Protokolleintrags zurück.*
 
 ```javascript
-// Input
+// Eingabe
 
-// HTTP method: POST
-// Expected properties: id
+// HTTP-Methode: POST
+// Erwartete Eigenschaften: id
 // Content-Type: application/x-www-form-urlencoded
 
 "id:1353059"        // Key-Value x-www-form-urlencoded
 ```
 
 ```javascript
-// Output
+// Ausgabe
 
 // Content-Type: application/json
 
@@ -1748,11 +1764,12 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 }
 ```
 
-**Notes:**
+**Hinweise:**
 
-* None
+* Keine
 
 ***
+
 
 
 
@@ -1761,20 +1778,20 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 
 > <https://trashmail.com/?api=1&lang=en&cmd=del_logging>
 
-*Deletes a specific entry from the log list.
+*Löscht einen bestimmten Eintrag aus der Protokollliste.*
 
 ```javascript
-// Input
+// Eingabe
 
-// HTTP method: POST
-// Expected properties: idList
+// HTTP-Methode: POST
+// Erwartete Eigenschaften: idList
 // Content-Type: application/x-www-form-urlencoded
 
 "idList:[1337278]"      // Key-Value x-www-form-urlencoded
 ```
 
 ```javascript
-// Output
+// Ausgabe
 
 // Content-Type: application/json
 
@@ -1784,11 +1801,12 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 }
 ```
 
-**Notes:**
+**Hinweise:**
 
-* Multiple IDs can be specified, these are separated by commas `[1,2,3]`.
+* Es können mehrere IDs angegeben werden, diese werden durch Komma getrennt `[1,2,3]`.
 
 ***
+
 
 
 
@@ -1797,13 +1815,13 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 
 > <https://trashmail.com/?api=1&lang=en&cmd=send_logging_emails>
 
-*Resends the email from the log to the specified email address.
+*Sendet die E-Mail aus dem Protokoll erneut an die angegebene E-Mail Adresse.*
 
 ```javascript
-// Input
+// Eingabe
 
-// HTTP method: POST
-// Expected properties: idList, fwd
+// HTTP-Methode: POST
+// Erwartete Eigenschaften: idList, fwd
 // Content-Type: application/x-www-form-urlencoded
 
 "idList:[1337275]"                  // Key-Value x-www-form-urlencoded
@@ -1811,7 +1829,7 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 ```
 
 ```javascript
-// Output
+// Ausgabe
 
 // Content-Type: application/json
 
@@ -1821,12 +1839,13 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 }
 ```
 
-**Notes:**
+**Hinweise:**
 
-* Multiple IDs can be specified, these are separated by commas `[1,2,3]`.
-* The fwd mail address must be a real email address stored in the account.
+* Es können mehrere IDs angegeben werden, diese werden durch Komma getrennt `[1,2,3]`.
+* Die fwd-Mail-Adresse muss eine im Account hinterlegte echte E-Mail Adresse sein. 
 
 ***
+
 
 
 
@@ -1835,13 +1854,13 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 
 > <https://trashmail.com/?api=1&lang=en&cmd=load_cs_messages>
 
-*Returns the individual notifications (e.g. if confirmation code is required for delivery) for a given TrashMail.
+*Gibt die individuellen Benachrichtigungen (z.B. wenn Bestätigungscode für Zustellung notwendig ist) für eine bestimmte TrashMail zurück.*
 
 ```javascript
-// Input
+// Eingabe
 
-// HTTP method: POST
-// Expected properties: data
+// HTTP-Methode: POST
+// Erwartete Eigenschaften: data
 // Content-Type: application/x-www-form-urlencoded
 
 'data:["39730821","wl-confirm"]'        // Key-Value x-www-form-urlencoded
@@ -1849,7 +1868,7 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 ```
 
 ```javascript
-// Output
+// Ausgabe
 
 // Content-Type: application/json
 
@@ -1865,11 +1884,12 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 }
 ```
 
-**Notes:** **
+**Hinweise:**
 
-* The ID specified in the request is not the "ID" of the TrashMail, but the "UID" of the TrashMail! Contained in the return of the DEAs: `{"id": "13549165", "uid": "39730389", ...`.
+* Die im Request angegebene ID ist nicht die "ID" der TrashMail, sondern die "UID" der TrashMail! Enthalten in der Rückgabe der DEAs: `{"id":"13549165","uid":"39730389", ...`.
 
 ***
+
 
 
 
@@ -1878,13 +1898,13 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 
 > <https://trashmail.com/?api=1&lang=en&cmd=save_cs_messages>
 
-*Saves a different version of the individual notifications (e.g. if confirmation code for delivery is required) for a specific TrashMail.
+*Speichert eine andere Version der individuellen Benachrichtigungen (z.B. wenn Bestätigungscode für Zustellung notwendig ist) für eine bestimmte TrashMail.*
 
 ```javascript
-// Input
+// Eingabe
 
-// HTTP method: POST
-// Expected properties: param, name, from, subject, body
+// HTTP-Methode: POST
+// Erwartete Eigenschaften: param, name, from, subject, body
 // Content-Type: application/x-www-form-urlencoded
 
 'param:["39730821","wl-confirm"]'       // Key-Value x-www-form-urlencoded
@@ -1895,7 +1915,7 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 ```
 
 ```javascript
-// Output
+// Ausgabe
 
 // Content-Type: application/json
 
@@ -1905,11 +1925,12 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 }
 ```
 
-**Notes:** **
+**Hinweise:**
 
-* The ID specified in the request is not the "ID" of the TrashMail, but the "UID" of the TrashMail! Contained in the return of the DEAs: `{"id": "13549165", "uid": "39730389", ...`.
+* Die im Request angegebene ID ist nicht die "ID" der TrashMail, sondern die "UID" der TrashMail! Enthalten in der Rückgabe der DEAs: `{"id":"13549165","uid":"39730389", ...`.
 
 ***
+
 
 
 
@@ -1918,20 +1939,20 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 
 > <https://trashmail.com/?api=1&lang=en&cmd=read_whitelist>
 
-*Returns all entries of the whitelist of a specific TrashMail.
+*Gibt alle Einträge der Whitelist einer bestimmten TrashMail zurück.*
 
 ```javascript
-// Input
+// Eingabe
 
-// HTTP method: POST
-// Expected properties: user_id
+// HTTP-Methode: POST
+// Erwartete Eigenschaften: user_id
 // Content-Type: application/x-www-form-urlencoded
 
 "user_id:39730389"      // Key-Value x-www-form-urlencoded
 ```
 
 ```javascript
-// Output
+// Ausgabe
 
 // Content-Type: application/json
 
@@ -1949,11 +1970,12 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 }
 ```
 
-**Notes:** **
+**Hinweise:**
 
-* The ID specified in the request is not the "ID" of the TrashMail, but the "UID" of the TrashMail! Contained in the return of the DEAs: `{"id": "13549165", "uid": "39730389", ...`.
+* Die im Request angegebene ID ist nicht die "ID" der TrashMail, sondern die "UID" der TrashMail! Enthalten in der Rückgabe der DEAs: `{"id":"13549165","uid":"39730389", ...`.
 
 ***
+
 
 
 
@@ -1962,13 +1984,13 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 
 > <https://trashmail.com/?api=1&lang=en&cmd=read_whitelist>
 
-*Returns the whitelist entries of a given TrashMail that match the search criterion.
+*Gibt die Einträge der Whitelist einer bestimmten TrashMail zurück, die das Suchkriterium erfüllen.*
 
 ```javascript
-// Input
+// Eingabe
 
-// HTTP method: POST
-// Expected properties: user_id, search
+// HTTP-Methode: POST
+// Erwartete Eigenschaften: user_id, search
 // Content-Type: application/x-www-form-urlencoded
 
 "user_id:39730389"      // Key-Value x-www-form-urlencoded
@@ -1976,7 +1998,7 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 ```
 
 ```javascript
-// Output
+// Ausgabe
 
 // Content-Type: application/json
 
@@ -1994,11 +2016,12 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 }
 ```
 
-**Notes:** **
+**Hinweise:**
 
-* The ID specified in the request is not the "ID" of the TrashMail, but the "UID" of the TrashMail! Contained in the return of the DEAs: `{"id": "13549165", "uid": "39730389", ...`.
+* Die im Request angegebene ID ist nicht die "ID" der TrashMail, sondern die "UID" der TrashMail! Enthalten in der Rückgabe der DEAs: `{"id":"13549165","uid":"39730389", ...`.
 
 ***
+
 
 
 
@@ -2007,20 +2030,20 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 
 > <https://trashmail.com/?api=1&lang=en&cmd=whitelist_add>
 
-*Adds an email address to the whitelist of a specific TrashMail.
+*Fügt eine E-Mail Adresse der Whitelist einer bestimmten TrashMail hinzu.*
 
 ```javascript
-// Input
+// Eingabe
 
-// HTTP method: POST
-// Expected properties: data
+// HTTP-Methode: POST
+// Erwartete Eigenschaften: data
 // Content-Type: application/x-www-form-urlencoded
 
 'data:["39730389","example@example.email"]'     // Key-Value x-www-form-urlencoded
 ```
 
 ```javascript
-// Output
+// Ausgabe
 
 // Content-Type: application/json
 
@@ -2030,11 +2053,12 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 }
 ```
 
-**Notes:** **
+**Hinweise:**
 
-* The ID specified in the request is not the "ID" of the TrashMail, but the "UID" of the TrashMail! Contained in the return of the DEAs: `{"id": "13549165", "uid": "39730389", ...`.
+* Die im Request angegebene ID ist nicht die "ID" der TrashMail, sondern die "UID" der TrashMail! Enthalten in der Rückgabe der DEAs: `{"id":"13549165","uid":"39730389", ...`.
 
 ***
+
 
 
 
@@ -2043,20 +2067,20 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 
 > <https://trashmail.com/?api=1&lang=en&cmd=whitelist_delete>
 
-*Removes an email address from the whitelist of a specific TrashMail.
+*Entfernt eine E-Mail Adresse aus der Whitelist einer bestimmten TrashMail.*
 
 ```javascript
-// Input
+// Eingabe
 
-// HTTP method: POST
-// Expected properties: data
+// HTTP-Methode: POST
+// Erwartete Eigenschaften: data
 // Content-Type: application/x-www-form-urlencoded
 
 "data:45618"        // Key-Value x-www-form-urlencoded
 ```
 
 ```javascript
-// Output
+// Ausgabe
 
 // Content-Type: application/json
 
@@ -2066,11 +2090,12 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 }
 ```
 
-**Notes:**
+**Hinweise:**
 
-* The data id is the `id` returned by `read_whitelist`.
+* Die Data-ID ist die `id`, die bei `read_whitelist` zurückgegeben wird.
 
 ***
+
 
 
 
@@ -2079,13 +2104,13 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 
 > <https://trashmail.com/?api=1&lang=en&cmd=add_blacklist>
 
-*Adds an email address to the blacklist of a specific TrashMail.
+*Fügt eine E-Mail Adresse der Blacklist einer bestimmten TrashMail hinzu.*
 
 ```javascript
-// Input
+// Eingabe
 
-// HTTP method: POST
-// Expected properties: id, description, mail_from, subject, body
+// HTTP-Methode: POST
+// Erwartete Eigenschaften: id, description, mail_from, subject, body
 // Content-Type: application/x-www-form-urlencoded
 
 "id:13544576"                           // Key-Value x-www-form-urlencoded
@@ -2096,7 +2121,7 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 ```
 
 ```javascript
-// Output
+// Ausgabe
 
 // Content-Type: application/json
 
@@ -2106,11 +2131,12 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 }
 ```
 
-**Notes:**
+**Hinweise:**
 
-* None
+* Keine
 
 ***
+
 
 
 
@@ -2119,20 +2145,20 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 
 > <https://trashmail.com/?api=1&lang=en&cmd=del_blacklist>
 
-*Removes an email address from the blacklist of a specific TrashMail.
+*Entfernt eine E-Mail Adresse aus der Blacklist einer bestimmten TrashMail.*
 
 ```javascript
-// Input
+// Eingabe
 
-// HTTP method: POST
-// Expected properties: id
+// HTTP-Methode: POST
+// Erwartete Eigenschaften: id
 // Content-Type: application/x-www-form-urlencoded
 
 "id:297"        // Key-Value x-www-form-urlencoded
 ```
 
 ```javascript
-// Output
+// Ausgabe
 
 // Content-Type: application/json
 
@@ -2142,11 +2168,12 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 }
 ```
 
-**Notes:**
+**Hinweise:**
 
-* The `id` is returned for `read_blacklist`.
+* Die `id` wird bei `read_blacklist` zurückgegeben.
 
 ***
+
 
 
 
@@ -2155,20 +2182,20 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 
 > <https://trashmail.com/?api=1&lang=en&cmd=read_blacklist>
 
-*Returns all blacklist entries of a specific TrashMail.
+*Gibt alle Einträge der Blacklist einer bestimmten TrashMail zurück.*
 
 ```javascript
-// Input
+// Eingabe
 
-// HTTP method: POST
-// Expected properties: id
+// HTTP-Methode: POST
+// Erwartete Eigenschaften: id
 // Content-Type: application/x-www-form-urlencoded
 
 "id:13544576"       // Key-Value x-www-form-urlencoded
 ```
 
 ```javascript
-// Output
+// Ausgabe
 
 // Content-Type: application/json
 
@@ -2192,11 +2219,12 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 }
 ```
 
-**Notes:**
+**Hinweise:**
 
-* None
+* Keine
 
 ***
+
 
 
 
@@ -2205,13 +2233,13 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 
 > <https://trashmail.com/?api=1&lang=en&cmd=read_blacklist>
 
-*Returns the blacklist entries of a given TrashMail that match the search criterion.
+*Gibt die Einträge der Blacklist einer bestimmten TrashMail zurück, die das Suchkriterium erfüllen.*
 
 ```javascript
-// Input
+// Eingabe
 
-// HTTP method: POST
-// Expected properties: id, search
+// HTTP-Methode: POST
+// Erwartete Eigenschaften: id, search
 // Content-Type: application/x-www-form-urlencoded
 
 "id:13544576"       // Key-Value x-www-form-urlencoded
@@ -2219,7 +2247,7 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 ```
 
 ```javascript
-// Output
+// Ausgabe
 
 // Content-Type: application/json
 
@@ -2243,11 +2271,12 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 }
 ```
 
-**Notes:**
+**Hinweise:**
 
-* None
+* Keine
 
 ***
+
 
 
 
@@ -2256,13 +2285,13 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 
 > <https://trashmail.com/?api=1&lang=en&cmd=edit_blacklist>
 
-*Edits an entry in the blacklist of a TrashMail.
+*Bearbeitet einen Eintrag in der Blacklist einer TrashMail.*
 
 ```javascript
-// Input
+// Eingabe
 
-// HTTP method: POST
-// Expected properties: id (einzig verpflichtend), description, mail_from, subject, body
+// HTTP-Methode: POST
+// Erwartete Eigenschaften: id (einzig verpflichtend), description, mail_from, subject, body
 // Content-Type: application/x-www-form-urlencoded
 
 "id:299"                                            // Key-Value x-www-form-urlencoded
@@ -2271,7 +2300,7 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 ```
 
 ```javascript
-// Output
+// Ausgabe
 
 // Content-Type: application/json
 
@@ -2281,11 +2310,12 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 }
 ```
 
-**Notes:**
+**Hinweise:**
 
-* It is not always necessary to pass all values. It is sufficient if the value to be changed (e.g. `description`) is passed. However, it is mandatory to pass the `id` for server-side identification.
+* Es müssen nicht immer alle Werte übergeben werden. Es reicht aus, wenn der zu ändernde Wert (z.B. `description`) übergeben wird. Zwingend angegeben werden muss aber die `id` zur serverseitigen Identifizierung.
 
 ***
+
 
 
 
@@ -2294,20 +2324,20 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 
 > <https://trashmail.com/?api=1&lang=en&cmd=read_queue>
 
-*Returns all queue entries of a given TrashMail.
+*Gibt alle Einträge der Warteschlange einer bestimmten TrashMail zurück.*
 
 ```javascript
-// Input
+// Eingabe
 
-// HTTP method: POST
-// Expected properties: user_id
+// HTTP-Methode: POST
+// Erwartete Eigenschaften: user_id
 // Content-Type: application/x-www-form-urlencoded
 
 "user_id:39705691"      // Key-Value x-www-form-urlencoded
 ```
 
 ```javascript
-// Output
+// Ausgabe
 
 // Content-Type: application/json
 
@@ -2326,11 +2356,12 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 }
 ```
 
-**Notes:** **
+**Hinweise:**
 
-* The ID specified in the request is not the "ID" of the TrashMail, but the "UID" of the TrashMail! Contained in the return of the DEAs: `{"id": "13549165", "uid": "39730389", ...`.
+* Die im Request angegebene ID ist nicht die "ID" der TrashMail, sondern die "UID" der TrashMail! Enthalten in der Rückgabe der DEAs: `{"id":"13549165","uid":"39730389", ...`.
 
 ***
+
 
 
 
@@ -2339,13 +2370,13 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 
 > <https://trashmail.com/?api=1&lang=en&cmd=read_queue>
 
-*Returns the queue entries of a given TrashMail that match the search criterion.
+*Gibt die Einträge der Warteschlange einer bestimmten TrashMail zurück, die das Suchkriterium erfüllen.*
 
 ```javascript
-// Input
+// Eingabe
 
-// HTTP method: POST
-// Expected properties: user_id, search
+// HTTP-Methode: POST
+// Erwartete Eigenschaften: user_id, search
 // Content-Type: application/x-www-form-urlencoded
 
 "user_id:39705691"      // Key-Value x-www-form-urlencoded
@@ -2353,7 +2384,7 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 ```
 
 ```javascript
-// Output
+// Ausgabe
 
 // Content-Type: application/json
 
@@ -2372,11 +2403,12 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 }
 ```
 
-**Notes:** **
+**Hinweise:**
 
-* The ID specified in the request is not the "ID" of the TrashMail, but the "UID" of the TrashMail! Contained in the return of the DEAs: `{"id": "13549165", "uid": "39730389", ...`.
+* Die im Request angegebene ID ist nicht die "ID" der TrashMail, sondern die "UID" der TrashMail! Enthalten in der Rückgabe der DEAs: `{"id":"13549165","uid":"39730389", ...`.
 
 ***
+
 
 
 
@@ -2385,20 +2417,20 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 
 > <https://trashmail.com/?api=1&lang=en&cmd=queue_delete_msg>
 
-*Deletes a specific email from the queue of a specific TrashMail.
+*Löscht eine bestimmte E-Mail aus der Warteschlange einer bestimmten TrashMail.*
 
 ```javascript
-// Input
+// Eingabe
 
-// HTTP method: POST
-// Expected properties: data
+// HTTP-Methode: POST
+// Erwartete Eigenschaften: data
 // Content-Type: application/x-www-form-urlencoded
 
 "data:17797197"     // Key-Value x-www-form-urlencoded
 ```
 
 ```javascript
-// Output
+// Ausgabe
 
 // Content-Type: application/json
 
@@ -2408,9 +2440,9 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 }
 ```
 
-**Notes:**
+**Hinweise:**
 
-* None
+* Keine
 
 ***
 
@@ -2422,20 +2454,20 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 
 > <https://trashmail.com/?api=1&lang=en&cmd=queue_delete_all_msg>
 
-*Deletes all emails from the queue of a specific TrashMail.
+*Löscht alle E-Mails aus der Warteschlange einer bestimmten TrashMail.*
 
 ```javascript
-// Input
+// Eingabe
 
-// HTTP method: POST
-// Expected properties: data
+// HTTP-Methode: POST
+// Erwartete Eigenschaften: data
 // Content-Type: application/x-www-form-urlencoded
 
 "data:39705691"     // Key-Value x-www-form-urlencoded
 ```
 
 ```javascript
-// Output
+// Ausgabe
 
 // Content-Type: application/json
 
@@ -2445,11 +2477,12 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 }
 ```
 
-**Notes:** **
+**Hinweise:**
 
-* The ID specified in the request is not the "ID" of the TrashMail, but the "UID" of the TrashMail! Contained in the return of the DEAs: `{"id": "13549165", "uid": "39730389", ...`.
+* Die im Request angegebene ID ist nicht die "ID" der TrashMail, sondern die "UID" der TrashMail! Enthalten in der Rückgabe der DEAs: `{"id":"13549165","uid":"39730389", ...`.
 
 ***
+
 
 
 
@@ -2458,20 +2491,20 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 
 > <https://trashmail.com/?api=1&lang=en&cmd=queue_accept_msg>
 
-*Accepts an email from the queue of a specific TrashMail.
+*Akzeptiert eine E-Mail aus der Warteschlange einer bestimmten TrashMail.*
 
 ```javascript
-// Input
+// Eingabe
 
-// HTTP method: POST
-// Expected properties: data
+// HTTP-Methode: POST
+// Erwartete Eigenschaften: data
 // Content-Type: application/x-www-form-urlencoded
 
 "data:17797209"     // Key-Value x-www-form-urlencoded
 ```
 
 ```javascript
-// Output
+// Ausgabe
 
 // Content-Type: application/json
 
@@ -2481,8 +2514,8 @@ _!!! TrashMail-Plus feature (forwards > 10 and expiration > 1 month) !!!_
 }
 ```
 
-**Notes:**
+**Hinweise:**
 
-* All waiting emails from the same sender will be allowed through.
+* Es werden alle wartenden E-Mails des gleichen Absenders durchgelassen.
 
 ***
